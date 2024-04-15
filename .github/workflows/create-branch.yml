@@ -3,6 +3,7 @@ name: Issue アサイン時にブランチを自動作成
 on:
   issues:
     types: [assigned]
+
 jobs:
   create-branch:
     runs-on: ubuntu-latest
@@ -24,15 +25,15 @@ jobs:
             const issue_number = context.payload.issue.number;
             const labels = context.payload.issue.labels.map(label => label.name);
             const branchName = labels.length > 0 ? `${labels[0]}/issue-${issue_number}` : `issue-${issue_number}`;
-            
+             
             const ref = `refs/heads/${branchName}`;
             try {
               const sha = (await github.rest.git.getRef({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                ref: 'heads/master'  // 'main'から'master'に変更
+                ref: 'heads/master' // 'main'から'master'に変更
               })).data.object.sha;
-            
+               
               await github.rest.git.createRef({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -47,4 +48,12 @@ jobs:
                 console.error(`ブランチの作成に失敗しました: ${error.message}`);
               }
             }
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Post comment to issue
+        uses: github/actions/add-comment@v1
+        with:
+          body: |
+            ブランチ [${branchName}](https://docs.github.com/en/actions/learn-github-actions/contexts) が作成されました。
+          issue_number: ${{ context.payload.issue.number }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
