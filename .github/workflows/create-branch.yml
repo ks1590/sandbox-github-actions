@@ -28,9 +28,6 @@ jobs:
 
       - name: Set branch name (using Python for parsing)
         id: set-branch-name
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x' 
         run: |
           import json
           import sys
