@@ -1,0 +1,43 @@
+name: プルリクエストマージ時に関連Issueをクローズ
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  close-related-issue:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Close Related Issue
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const branchName = context.payload.pull_request.head.ref;
+            const isMerged = context.payload.pull_request.merged;
+            
+            // プルリクエストがマージされた場合のみ実行
+            if (isMerged) {
+              const issueNumberPattern = /issue-(\d+)/;
+              const match = branchName.match(issueNumberPattern);
+              
+              if (match) {
+                const issueNumber = match[1];
+                
+                // 関連するIssueをクローズ
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  state: 'closed'
+                });
+
+                console.log(`Issue #${issueNumber} がクローズされました。`);
+              } else {
+                console.log('ブランチ名からIssue番号を見つけることができませんでした。');
+              }
+            } else {
+              console.log('プルリクエストはマージされませんでした。');
+            }
+          github-token: ${{ secrets.GITHUB_TOKEN }}
