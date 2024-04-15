@@ -1,0 +1,42 @@
+name: Pull Request に Issue リンクをコメント
+
+on:
+  pull_request:
+    types: [opened, reopened]
+
+jobs:
+  link-issue:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Link Issue in Comment
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const prTitle = context.payload.pull_request.title;
+            const prBody = context.payload.pull_request.body;
+            const branchName = context.payload.pull_request.head.ref;
+            const repoUrl = context.payload.repository.html_url;
+            
+            // ブランチ名からIssue番号を抽出する正規表現パターン
+            const issueNumberPattern = /issue-(\d+)/;
+            const match = branchName.match(issueNumberPattern);
+            
+            if (match) {
+              const issueNumber = match[1];
+              const issueUrl = `${repoUrl}/issues/${issueNumber}`;
+              const comment = `このプルリクエストはIssue [#${issueNumber}](${issueUrl}) に関連しています。`;
+              
+              // プルリクエストにコメントを投稿
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number, // PRの番号を使用
+                body: comment
+              });
+            } else {
+              console.log('ブランチ名からIssue番号を見つけることができませんでした。');
+            }
+          github-token: ${{ secrets.GITHUB_TOKEN }}
