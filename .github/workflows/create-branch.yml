@@ -1,4 +1,4 @@
-name: Issue アサイン時にラベルと番号を取得
+name: Issue アサイン時にラベルと番号を取得し、ブランチを作成
 
 on:
   issues:
@@ -20,3 +20,8 @@ jobs:
             const labels = context.payload.issue.labels.map(label => label.name);
             console.log(`Issue 番号: ${issue_number}`);
             console.log(`ラベル: ${labels}`);
+      - uses: github/actions/create-branch@v3
+        with:
+          ref: `${labels[0]}/issue-${issue_number}`
+          force: true
+          message: `Issue ${issue_number} のラベルに基づいて作成されたブランチ`
