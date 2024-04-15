@@ -9,22 +9,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
-      - name: Get issue label and assignee
-        id: get-info
-        uses: octokit/core@v3.5.0
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          event_payload: ${{ github.event.payload }}
-          output: json
+          bun-version: latest
 
-      - name: Set branch name
+      - name: Get issue label and assignee using Bun
+        id: get-info
+        run: |
+          issue_url="https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}"
+          response=$(bun run fetch $issue_url \
+                      -H "Accept: application/vnd.github+json" \
+                      -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}")
+          
+          echo "::set-output name=json::$response"
+
+      - name: Set branch name (using Bun's json parsing)
         id: set-branch-name
         run: |
-          echo "Branch name: ${{ steps.get-info.outputs.issue.labels[0].name }}-${{ steps.get-info.outputs.issue.assignee.login }}"
-          echo "::set-output name=branch_name::${{ steps.set-branch-name.outputs.branch_name }}"
+          json=$(echo ${{ steps.get-info.outputs.json }} | bun run jq .)
+          label=$(echo $json.labels[0].name | bun run jq -r .)
+          assignee=$(echo $json.assignee.login | bun run jq -r .)
+          echo "Branch name: ${label}-${assignee}"
+          echo "::set-output name=branch_name::${label}-${assignee}"
 
       - name: Create branch
         run: |
-          git checkout -b "feature/issue-${{ github.event.issue.number }}"
-          git checkout -b "feature/issue-${{ github.event.issue.number }}"
+          git checkout -b "feature/${{ steps.set-branch-name.outputs.branch_name }}" 
