@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      issues: write  # Issueにコメントを投稿する権限を追加
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -18,22 +19,22 @@ jobs:
         with:
           node-version: '16'
 
-      - name: Create a branch based on issue label
+      - name: Create a branch based on issue label and post a comment
         uses: actions/github-script@v6
         with:
           script: |
             const issue_number = context.payload.issue.number;
             const labels = context.payload.issue.labels.map(label => label.name);
             const branchName = labels.length > 0 ? `${labels[0]}/issue-${issue_number}` : `issue-${issue_number}`;
-             
+            
             const ref = `refs/heads/${branchName}`;
             try {
               const sha = (await github.rest.git.getRef({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                ref: 'heads/master' // 'main'から'master'に変更
+                ref: 'heads/master'  // 'main'から'master'に変更
               })).data.object.sha;
-               
+              
               await github.rest.git.createRef({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -41,6 +42,15 @@ jobs:
                 sha
               });
               console.log(`ブランチ '${branchName}' が正常に作成されました。`);
+              
+              // ブランチ作成後にIssueにコメントを投稿
+              const comment = `ブランチが作成されました: [${branchName}](https://github.com/${context.repo.owner}/${context.repo.repo}/tree/${branchName})`;
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue_number,
+                body: comment
+              });
             } catch (error) {
               if (error.status === 404) {
                 console.log('デフォルトブランチが見つかりません。`main` 以外のブランチをデフォルトとしている場合は、スクリプト内の `heads/master` を適切なブランチ名に変更してください。');
@@ -48,12 +58,4 @@ jobs:
                 console.error(`ブランチの作成に失敗しました: ${error.message}`);
               }
             }
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Post comment to issue
-        uses: github/actions/add-comment@v1
-        with:
-          body: |
-            ブランチ [${branchName}](https://docs.github.com/en/actions/learn-github-actions/contexts) が作成されました。
-          issue_number: ${{ context.payload.issue.number }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
