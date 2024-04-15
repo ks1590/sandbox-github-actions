@@ -9,10 +9,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
       - uses: actions/github-script@v6
         with:
           script: |
-            const issue_number = github.context.payload.issue.number;
-            const labels = github.context.payload.issue.labels.map(label => label.name);
+            const issue_number = context.payload.issue.number;
+            const labels = context.payload.issue.labels.map(label => label.name);
             console.log(`Issue 番号: ${issue_number}`);
             console.log(`ラベル: ${labels}`);
