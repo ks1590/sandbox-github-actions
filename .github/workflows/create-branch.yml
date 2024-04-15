@@ -24,17 +24,25 @@ jobs:
             
             // ブランチ名の設定（最初のラベルを使用）
             const branchName = labels[0] ? `${labels[0]}/issue-${issue_number}` : `issue-${issue_number}`;
+            console.log(`ブランチ名: ${branchName}`);
             
             // GitHub REST APIを使用してブランチを作成
             const ref = `refs/heads/${branchName}`;
-            const sha = (await github.git.getRef({
-              ...context.repo,
-              ref: 'heads/main'
-            })).data.object.sha;
-            
-            await github.git.createRef({
-              ...context.repo,
-              ref,
-              sha
-            });
-            console.log(`ブランチ '${branchName}' を作成しました。`);
+            try {
+              const sha = (await github.rest.git.getRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: 'heads/main'
+              })).data.object.sha;
+              
+              await github.rest.git.createRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref,
+                sha
+              });
+              console.log(`ブランチ '${branchName}' を作成しました。`);
+            } catch (error) {
+              console.error(`ブランチ作成中にエラーが発生しました: ${error.message}`);
+            }
+
