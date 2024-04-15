@@ -1,44 +1,18 @@
-name: Create Branch from Issue Label and Assignee
+name: Issue アサイン時にラベルと番号を取得
 
 on:
-  issues:
+  issue:
     types: [assigned]
 
 jobs:
-  create-branch:
+  get-issue-number-and-labels:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+      - uses: actions/github-script@v6
         with:
-          bun-version: latest
-
-      - name: Get issue label and assignee using Bun
-        id: get-info
-        run: |
-          issue_url="https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}"
-          response=$(bun run fetch $issue_url \
-                      -H "Accept: application/vnd.github+json" \
-                      -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}")
-          
-          echo "::set-output name=json::$response"
-
-      - name: Set branch name (using Python for parsing)
-        id: set-branch-name
-        run: |
-          import json
-          import sys
-
-          data = json.loads('${{ steps.get-info.outputs.json }}')
-          label = data['labels'][0]['name']
-          assignee = data['assignee']['login']
-          branch_name = f"feature/{label}-{assignee}"
-
-          print(f"::set-output name=branch_name::{branch_name}")
-
-      - name: Create branch
-        run: |
-          git checkout -b ${{ steps.set-branch-name.outputs.branch_name }} 
+          script: |
+            const issue_number = github.context.payload.issue.number;
+            const labels = github.context.payload.issue.labels.map(label => label.name);
+            console.log(`Issue 番号: ${issue_number}`);
+            console.log(`ラベル: ${labels}`);
