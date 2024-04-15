@@ -5,23 +5,36 @@ on:
     types: [assigned]
 
 jobs:
-  get-issue-number-and-labels:
+  get-issue-number-and-labels-and-create-branch:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: 20      
-      - uses: actions/github-script@v6
+          node-version: '20'      
+      - name: Get issue info and create a branch
+        uses: actions/github-script@v6
         with:
           script: |
             const issue_number = context.payload.issue.number;
             const labels = context.payload.issue.labels.map(label => label.name);
             console.log(`Issue 番号: ${issue_number}`);
             console.log(`ラベル: ${labels}`);
-      - uses: github/actions/create-branch@v3
-        with:
-          ref: ${labels[0]}/issue-${issue_number}
-          force: true
-          message: Issue ${issue_number} のラベルに基づいて作成されたブランチ
+            
+            // ブランチ名の設定（最初のラベルを使用）
+            const branchName = labels[0] ? `${labels[0]}/issue-${issue_number}` : `issue-${issue_number}`;
+            
+            // GitHub REST APIを使用してブランチを作成
+            const ref = `refs/heads/${branchName}`;
+            const sha = (await github.git.getRef({
+              ...context.repo,
+              ref: 'heads/main'
+            })).data.object.sha;
+            
+            await github.git.createRef({
+              ...context.repo,
+              ref,
+              sha
+            });
+            console.log(`ブランチ '${branchName}' を作成しました。`);
