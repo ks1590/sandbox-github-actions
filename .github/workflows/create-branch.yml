@@ -1,0 +1,30 @@
+name: Create Branch from Issue Label and Assignee
+
+on:
+  issues:
+    types: [assigned]
+
+jobs:
+  create-branch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get issue label and assignee
+        id: get-info
+        uses: octokit/core@v3.5.0
+        with:
+          event_payload: ${{ github.event.payload }}
+          output: json
+
+      - name: Set branch name
+        id: set-branch-name
+        run: |
+          echo "Branch name: ${{ steps.get-info.outputs.issue.labels[0].name }}-${{ steps.get-info.outputs.issue.assignee.login }}"
+          echo "::set-output name=branch_name::${{ steps.set-branch-name.outputs.branch_name }}"
+
+      - name: Create branch
+        run: |
+          git checkout -b "feature/issue-${{ github.event.issue.number }}"
+          git checkout -b "feature/issue-${{ github.event.issue.number }}"
