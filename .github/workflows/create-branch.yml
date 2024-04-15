@@ -20,24 +20,18 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const github = require('@actions/github');
-            const core = require('@actions/core');
             const issue_number = context.payload.issue.number;
             const labels = context.payload.issue.labels.map(label => label.name);
             const branchName = labels.length > 0 ? `${labels[0]}/issue-${issue_number}` : `issue-${issue_number}`;
-            console.log(`branchName: ${branchName}`);
 
             const ref = `refs/heads/${branchName}`;
-            const sha = (await github.rest.git.getRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: 'heads/main'
-            })).data.object.sha;
-
-            console.log(`ref: ${ref}`);
-            console.log(`sha: ${sha}`);            
-
             try {
+              const sha = (await github.rest.git.getRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: 'heads/main'
+              })).data.object.sha;
+
               await github.rest.git.createRef({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -46,5 +40,9 @@ jobs:
               });
               console.log(`ブランチ '${branchName}' が正常に作成されました。`);
             } catch (error) {
-              core.setFailed(`ブランチの作成に失敗しました: ${error.message}`);
+              if (error.status === 404) {
+                console.log('デフォルトブランチが見つかりません。`main` 以外のブランチをデフォルトとしている場合は、スクリプト内の `heads/main` を適切なブランチ名に変更してください。');
+              } else {
+                console.error(`ブランチの作成に失敗しました: ${error.message}`);
+              }
             }
