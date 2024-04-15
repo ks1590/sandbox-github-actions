@@ -1,21 +1,23 @@
-name: プルリクエストマージ時に関連Issueをクローズ
+name: プルリクエストマージ時に関連Issueをクローズしてコメントを投稿
 
 on:
   pull_request:
     types: [closed]
 
 jobs:
-  close-related-issue:
+  close-related-issue-and-comment:
     runs-on: ubuntu-latest
     permissions:
       issues: write
+      pull-requests: write  # プルリクエストへのコメント投稿権限を追加
     steps:
-      - name: Close Related Issue
+      - name: Close Related Issue and Post a Comment
         uses: actions/github-script@v6
         with:
           script: |
             const branchName = context.payload.pull_request.head.ref;
             const isMerged = context.payload.pull_request.merged;
+            const prNumber = context.payload.pull_request.number; // プルリクエストの番号
             
             // プルリクエストがマージされた場合のみ実行
             if (isMerged) {
@@ -34,6 +36,16 @@ jobs:
                 });
 
                 console.log(`Issue #${issueNumber} がクローズされました。`);
+                
+                // プルリクエストにクローズした旨のコメントを投稿
+                const comment = `関連するIssue #${issueNumber} がクローズされました。`;
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: prNumber, // プルリクエストの番号を使用
+                  body: comment
+                });
+                
               } else {
                 console.log('ブランチ名からIssue番号を見つけることができませんでした。');
               }
