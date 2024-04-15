@@ -1,48 +1,50 @@
-name: Issue アサイン時にラベルと番号を取得し、ブランチを作成
+name: Issue アサイン時にブランチを自動作成
 
 on:
   issues:
     types: [assigned]
 
 jobs:
-  get-issue-number-and-labels-and-create-branch:
+  create-branch:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          node-version: '20'      
-      - name: Get issue info and create a branch
+          node-version: '16'
+
+      - name: Create a branch based on issue label
         uses: actions/github-script@v6
         with:
           script: |
+            const github = require('@actions/github');
+            const core = require('@actions/core');
             const issue_number = context.payload.issue.number;
             const labels = context.payload.issue.labels.map(label => label.name);
-            console.log(`Issue 番号: ${issue_number}`);
-            console.log(`ラベル: ${labels}`);
-            
-            // ブランチ名の設定（最初のラベルを使用）
-            const branchName = labels[0] ? `${labels[0]}/issue-${issue_number}` : `issue-${issue_number}`;
-            console.log(`ブランチ名: ${branchName}`);
-            
-            // GitHub REST APIを使用してブランチを作成
+            const branchName = labels.length > 0 ? `${labels[0]}/issue-${issue_number}` : `issue-${issue_number}`;
+            console.log(`branchName: ${branchName}`);
+
             const ref = `refs/heads/${branchName}`;
+            const sha = (await github.rest.git.getRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'heads/main'
+            })).data.object.sha;
+
+            console.log(`ref: ${ref}`);
+            console.log(`sha: ${sha}`);            
+
             try {
-              const sha = (await github.rest.git.getRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: 'heads/main'
-              })).data.object.sha;
-              
               await github.rest.git.createRef({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 ref,
                 sha
               });
-              console.log(`ブランチ '${branchName}' を作成しました。`);
+              console.log(`ブランチ '${branchName}' が正常に作成されました。`);
             } catch (error) {
-              console.error(`ブランチ作成中にエラーが発生しました: ${error.message}`);
+              core.setFailed(`ブランチの作成に失敗しました: ${error.message}`);
             }
-
