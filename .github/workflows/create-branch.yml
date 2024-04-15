@@ -1,7 +1,7 @@
 name: Issue アサイン時にラベルと番号を取得
 
 on:
-  issue:
+  issues:
     types: [assigned]
 
 jobs:
