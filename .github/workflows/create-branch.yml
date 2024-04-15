@@ -26,15 +26,22 @@ jobs:
           
           echo "::set-output name=json::$response"
 
-      - name: Set branch name (using Bun's json parsing)
+      - name: Set branch name (using Python for parsing)
         id: set-branch-name
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x' 
         run: |
-          json=$(echo ${{ steps.get-info.outputs.json }} | bun run jq .)
-          label=$(echo $json.labels[0].name | bun run jq -r .)
-          assignee=$(echo $json.assignee.login | bun run jq -r .)
-          echo "Branch name: ${label}-${assignee}"
-          echo "::set-output name=branch_name::${label}-${assignee}"
+          import json
+          import sys
+
+          data = json.loads('${{ steps.get-info.outputs.json }}')
+          label = data['labels'][0]['name']
+          assignee = data['assignee']['login']
+          branch_name = f"feature/{label}-{assignee}"
+
+          print(f"::set-output name=branch_name::{branch_name}")
 
       - name: Create branch
         run: |
-          git checkout -b "feature/${{ steps.set-branch-name.outputs.branch_name }}" 
+          git checkout -b ${{ steps.set-branch-name.outputs.branch_name }} 
