@@ -19,9 +19,11 @@
 		"clsx": "^2.1.0",
 		"dayjs": "^1.11.10",
 		"fabricjs-react": "^1.2.2",
+		"leaflet": "^1.9.4",
 		"mantine-react-table": "^2.0.0-alpha.10",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
+		"react-leaflet": "^4.2.1",
 		"tui-image-editor": "^3.7.2"
 	},
 	"devDependencies": {
