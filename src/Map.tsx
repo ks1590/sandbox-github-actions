@@ -1,15 +1,23 @@
 import React, { useState } from 'react';
-import { MapContainer, ImageOverlay, useMap } from 'react-leaflet';
+import {
+	MapContainer,
+	ImageOverlay,
+	useMap,
+	Circle,
+	Popup,
+} from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { LatLngBounds } from 'leaflet';
+import L from 'leaflet';
 
 const Map = () => {
 	const [bounds, setBounds] = useState(
-		new LatLngBounds(
-			[51.515, -0.1], // top left corner
+		new L.LatLngBounds(
+			[51.525, -0.103], // top left corner
 			[51.495, -0.08] // bottom right corner
 		)
 	);
+
+	const circlePosition = { lat: 51.507913499585825, lng: -0.09278297424316408 };
 
 	const MapClickHandler = () => {
 		const map = useMap();
@@ -21,7 +29,7 @@ const Map = () => {
 	};
 
 	return (
-		<div>
+		<div style={{ width: '80vw' }}>
 			<MapContainer
 				zoomControl={false}
 				scrollWheelZoom={false}
@@ -34,6 +42,14 @@ const Map = () => {
 				style={{ height: '90vh' }}>
 				<MapClickHandler />
 				<ImageOverlay url='src/assets/Desktop.svg' bounds={bounds} />
+				<Circle
+					center={circlePosition}
+					pathOptions={{ color: 'green', fillColor: 'green' }}
+					radius={35}>
+					<Popup>
+						iwatsuki <br /> IT Support Department
+					</Popup>
+				</Circle>
 			</MapContainer>
 		</div>
 	);
