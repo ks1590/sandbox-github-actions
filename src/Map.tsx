@@ -1,59 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
 	MapContainer,
-	ImageOverlay,
-	useMap,
-	Circle,
+	Marker,
 	Popup,
+	TileLayer,
+	Rectangle,
+	useMap,
 } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
-// import { DraggableMarker } from './components/DraggableMarker';
-import { DraggableCircle } from './components/DraggableCircle';
+
+const DraggableRectangle = ({ bounds, options }) => {
+	const map = useMap();
+
+	useEffect(() => {
+		const rectangle = L.rectangle(bounds, options).addTo(map);
+		const draggable = new L.Draggable(rectangle.getElement());
+		draggable.enable();
+
+		// ドラッグ終了時に新しい境界をログに出力
+		draggable.on('dragend', function () {
+			console.log(rectangle.getBounds());
+		});
+
+		return () => {
+			draggable.disable();
+			map.removeLayer(rectangle);
+		};
+	}, [map, bounds, options]);
+
+	return null;
+};
 
 const Map = () => {
-	const [bounds, setBounds] = useState(
-		new L.LatLngBounds(
-			[51.525, -0.103], // top left corner
-			[51.495, -0.08] // bottom right corner
-		)
-	);
-
-	const circlePosition = { lat: 51.507913499585825, lng: -0.09278297424316408 };
-
-	// const MapClickHandler = () => {
-	// 	const map = useMap();
-	// 	map.on('click', (e) => {
-	// 		console.log(e.latlng); // クリックした座標の位置をコンソールに出力
-	// 		// ここで必要な処理を追加する
-	// 	});
-	// 	return null;
-	// };
+	const [position, setPosition] = useState({ lat: 55.3781, lng: -3.436 }); // イギリスの中心を初期位置として設定
+	const [zoom, setZoom] = useState(5); // 表示範囲を広げるためにズームレベルを調整
 
 	return (
-		<div style={{ width: '80vw' }}>
-			<MapContainer
-				zoomControl={false}
-				scrollWheelZoom={false}
-				doubleClickZoom={false}
-				touchZoom={false}
-				boxZoom={false}
-				dragging={false}
-				center={[51.505, -0.09]}
-				zoom={16}
-				style={{ height: '90vh' }}>
-				{/* <MapClickHandler /> */}
-				{/* <ImageOverlay url='src/assets/Desktop.svg' bounds={bounds} /> */}
-				<Circle
-					center={circlePosition}
-					pathOptions={{ color: 'green', fillColor: 'green' }}
-					radius={35}>
+		<div>
+			<MapContainer center={position} zoom={zoom} style={{ height: '90vh' }}>
+				<TileLayer
+					url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+					attribution='&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
+				/>
+				<Marker position={position}>
 					<Popup>
-						iwatsuki <br /> IT Support Department
+						A pretty CSS3 popup. <br /> Easily customizable.
 					</Popup>
-				</Circle>
-				{/* <DraggableMarker /> */}
-				<DraggableCircle />
+				</Marker>
+				<DraggableRectangle
+					bounds={[
+						[54.559322, -5.767822],
+						[56.1210604, -3.02124],
+					]}
+					options={{ color: '#ff7800', weight: 1 }}
+				/>
 			</MapContainer>
 		</div>
 	);
