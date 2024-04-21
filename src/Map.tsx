@@ -1,4 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, {
+	useState,
+	useEffect,
+	useRef,
+	useMemo,
+	useCallback,
+} from 'react';
 import {
 	MapContainer,
 	Marker,
@@ -10,7 +16,53 @@ import {
 } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { DraggableCircle } from './components/DraggableCircle';
+
+const center = {
+	lat: 51.505,
+	lng: -0.09,
+};
+
+const DraggableMarker = () => {
+	const [draggable, setDraggable] = useState(false);
+	const [position, setPosition] = useState(center);
+	const markerRef = useRef(null);
+	const eventHandlers = useMemo(
+		() => ({
+			dragend() {
+				const marker = markerRef.current;
+				if (marker != null) {
+					setPosition(marker.getLatLng());
+				}
+
+				// 座標を取得
+				if (marker != null) {
+					const latLng = marker.getLatLng();
+					console.log('新しいマーカー座標:', latLng);
+				}
+			},
+		}),
+		[]
+	);
+	const toggleDraggable = useCallback(() => {
+		setDraggable((d) => !d);
+	}, []);
+
+	return (
+		<Marker
+			draggable={draggable}
+			eventHandlers={eventHandlers}
+			position={position}
+			ref={markerRef}>
+			<Popup minWidth={90}>
+				<span onClick={toggleDraggable}>
+					{draggable
+						? 'Marker is draggable'
+						: 'Click here to make marker draggable'}
+				</span>
+			</Popup>
+		</Marker>
+	);
+};
 
 const DraggableRectangle = ({ bounds, options, setBounds }) => {
 	const map = useMap();
@@ -70,7 +122,7 @@ const Map = () => {
 					options={{ color: '#ff7800', weight: 1 }}
 					setBounds={setRectangleBounds}
 				/>
-				<DraggableCircle />
+				<DraggableMarker />
 			</MapContainer>
 		</div>
 	);
