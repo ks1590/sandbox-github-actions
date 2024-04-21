@@ -10,6 +10,12 @@ import { EditControl } from 'react-leaflet-draw';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
 
+type Window = typeof window & {
+	type: boolean;
+};
+const windowComponent = window as Window;
+windowComponent.type = true;
+
 const Map = () => {
 	const [position, setPosition] = useState({ lat: 51.505, lng: -0.09 }); // イギリスの中心を初期位置として設定
 	const [zoom, setZoom] = useState(5); // 表示範囲を広げるためにズームレベルを調整
