@@ -6,11 +6,11 @@ const DraggableCircle = () => {
     51.507913499585825, -0.09278297424316408,
   ]);
 
-  const map = useMapEvents({
-    click(e) {
-      setCenter([e.latlng.lat, e.latlng.lng]);
-    },
-  });
+  // const map = useMapEvents({
+  //   click(e) {
+  //     setCenter([e.latlng.lat, e.latlng.lng]);
+  //   },
+  // });
 
   const handleDragEnd = (e) => {
     setCenter([e.target._latlng.lat, e.target._latlng.lng]);
