@@ -5,8 +5,8 @@ import { Map } from './Map';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-	<StrictMode>
-		<Map />
-		{/* <Table /> */}
-	</StrictMode>
+  <StrictMode>
+    <Map />
+    {/* <Table /> */}
+  </StrictMode>
 );
