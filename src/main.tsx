@@ -1,12 +1,15 @@
 import { StrictMode } from 'react';
 import ReactDOM from 'react-dom/client';
-import { Map } from './Map';
-// import Table from './Table';
+import { MantineProvider } from '@mantine/core';
+// import { Map } from './Map';
+import Table from './components/Table';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <StrictMode>
-    <Map />
-    {/* <Table /> */}
+    <MantineProvider>
+      {/* <Map /> */}
+      <Table />
+    </MantineProvider>
   </StrictMode>
 );
